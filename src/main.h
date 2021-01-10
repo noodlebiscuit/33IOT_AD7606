@@ -34,6 +34,7 @@ union Sample
 };
 
 void readRAW(int16_t *);
-
+bool read_convertorBusy();
+void setChipSelect(PinStatus, uint8_t);
 // instantiate the AD7606
 //AD7606 ad7606(MISO, SCLK, CS, CONVST, BUSY, RESET, FREQUENCY);

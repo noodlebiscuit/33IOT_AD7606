@@ -1,80 +1,39 @@
-#include "main.h"
+#include "AD7606_SAMD21.h"
 
-//AD7606 ad7606();
-
-Sample adc;
-
-#define REGTYPE uint32_t
-REGTYPE pinConvst;
-volatile REGTYPE *modeConvst;
-volatile REGTYPE *outConvst;
-
-REGTYPE pinChipSelect;
-volatile REGTYPE *modeChipSelect;
-volatile REGTYPE *outChipSelect;
-
-REGTYPE pinReset;
-volatile REGTYPE *modeReset;
-volatile REGTYPE *outReset;
-
-
-
-
-void setup()
+/*
+** ================================================================================================
+**     CONSTRUCTOR
+** ================================================================================================
+**     Parameters :
+**         cs        - PIN used for SPI chip select
+**         convst    - PIN used to initiate the convertor start
+**         busy      - PIN read to determine if the convertor is still busy
+**         reset     - PIN used to reset the convertor
+**         frequency - sets the SPI clock frequency
+** ================================================================================================
+*/
+AD7606_SAMD21::AD7606_SAMD21(pin_size_t cs, pin_size_t convst, pin_size_t busy, pin_size_t reset, int frequency)
+    : _cs(cs),
+      _convst(convst),
+      _busy(busy),
+      _reset(reset),
+      _frequency(frequency)
 {
-   // set the hardware serial baud rate
-   Serial.begin(SERIAL_BAUD_RATE);
-   Serial.println("Initialise AD7606 board");
+   // use basic ARDUINO API
+   pinMode(_reset, OUTPUT);
+   pinMode(_busy, INPUT);
 
-   // initialize SPI interface for MCP3208
-   SPISettings settings(FREQUENCY, MSBFIRST, SPI_MODE0);
+   // initialize SPI interface
+   SPISettings settings(frequency, MSBFIRST, SPI_MODE0);
    SPI.begin();
    SPI.beginTransaction(settings);
 
-   pinMode(RESET, OUTPUT);
-   pinMode(BUSY, INPUT);
-
+   // bit-bash control of the AD7606 handshake and control pins
    setupControlPins();
 
-   // reset the ADC
-   reset();
-}
-
-
-void loop()
-{
-   int16_t *message = new int16_t[8];
-
-   //uint32_t t1;
-   //uint32_t t2;
-
-   //t1 = micros();
-
-   //for (int j = 0; j < 1000; ++j)
-   //{
-   readRAW(message, 4);
-   for (int i = 0; i < 8; ++i)
-   {
-      Serial.print(message[i]);
-      Serial.print(" ");
-   }
-
-   Serial.println("------------");
-   //}
-
-   //t2 = micros();
-
-   delete[] message;
-
-   // // sampling time
-   // Serial.print("Samples: ");
-   // Serial.println(1000);
-   // Serial.print("Sampling time: ");
-   // Serial.print(static_cast<double>(t2 - t1) / 1000, 4);
-   // Serial.println("ms");
-   delay(1000);
-}
-
+   // lastly we reset the ADC
+   resetADC();
+};
 
 /*
 ** ================================================================================================
@@ -84,7 +43,7 @@ void loop()
 **         returns a single sample set for N number of channels
 ** ================================================================================================
 */
-void readRAW(int16_t *rawDataBuffer, int channels)
+void AD7606_SAMD21::readRAW(int16_t *rawDataBuffer, int channels)
 {
    // toggle the convertor start line
    setConvertorStart(LOW);
@@ -115,22 +74,22 @@ void readRAW(int16_t *rawDataBuffer, int channels)
 **     Method      :  SetupControlPins
 **
 **     Description :
-**         Uses low level 
+**         bit-bash control of the AD7606 handshake and control pins 
 ** ================================================================================================
 */
-void setupControlPins()
+void AD7606_SAMD21::setupControlPins()
 {
-   pinConvst = digitalPinToBitMask(CONVST);
-   modeConvst = portModeRegister(digitalPinToPort(CONVST));
-   outConvst = portOutputRegister(digitalPinToPort(CONVST));
+   pinConvst = digitalPinToBitMask(_convst);
+   modeConvst = portModeRegister(digitalPinToPort(_convst));
+   outConvst = portOutputRegister(digitalPinToPort(_convst));
 
-   pinChipSelect = digitalPinToBitMask(CS);
-   modeChipSelect = portModeRegister(digitalPinToPort(CS));
-   outChipSelect = portOutputRegister(digitalPinToPort(CS));
+   pinChipSelect = digitalPinToBitMask(_cs);
+   modeChipSelect = portModeRegister(digitalPinToPort(_cs));
+   outChipSelect = portOutputRegister(digitalPinToPort(_cs));
 
-   pinReset = digitalPinToBitMask(RESET);
-   modeReset = portModeRegister(digitalPinToPort(RESET));
-   outReset = portOutputRegister(digitalPinToPort(RESET));
+   pinReset = digitalPinToBitMask(_reset);
+   modeReset = portModeRegister(digitalPinToPort(_reset));
+   outReset = portOutputRegister(digitalPinToPort(_reset));
 
    // set the RESET, CONVST and CS pins as output
    *modeConvst |= pinConvst;
@@ -146,7 +105,7 @@ void setupControlPins()
 **         toggles the AD7606 RESET line HIGH then LOW
 ** ================================================================================================
 */
-void reset()
+void AD7606_SAMD21::resetADC()
 {
    setReset(HIGH);
    delayMicroseconds(10);
@@ -161,7 +120,7 @@ void reset()
 **         set the convertor start (CONVST) line high or low
 ** ================================================================================================
 */
-void setConvertorStart(PinStatus status)
+void AD7606_SAMD21::setConvertorStart(PinStatus status)
 {
    *outConvst |= pinConvst;
    *outConvst = pinConvst & status;
@@ -175,7 +134,7 @@ void setConvertorStart(PinStatus status)
 **         set the SPI chip select (CS) line high or low
 ** ================================================================================================
 */
-void setChipSelect(PinStatus status)
+void AD7606_SAMD21::setChipSelect(PinStatus status)
 {
    *outChipSelect |= pinChipSelect;
    *outChipSelect = pinChipSelect & status;
@@ -189,7 +148,7 @@ void setChipSelect(PinStatus status)
 **         set the AD7606 RESET line high or low
 ** ================================================================================================
 */
-void setReset(PinStatus status)
+void AD7606_SAMD21::setReset(PinStatus status)
 {
    *outReset |= pinReset;
    *outReset = pinReset & status;
@@ -206,7 +165,7 @@ void setReset(PinStatus status)
 **         returns true while port is busy
 ** ================================================================================================
 */
-bool read_convertorBusy()
+bool AD7606_SAMD21::read_convertorBusy()
 {
    return (REG_PORT_IN0 & (PORT_PA18)) == PORT_PA18;
 }

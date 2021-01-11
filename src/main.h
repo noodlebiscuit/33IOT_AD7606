@@ -1,10 +1,10 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <SPI.h>
 #include <iostream>
 #include <vector>
 #include <sstream>
 #include "Stream.h"
-#include "ad7606.h"
 
 #pragma once
 #include <stdint.h>
@@ -22,7 +22,7 @@
 #define RESET 7  // AD7606 reset                -PA06
 
 #define FREQUENCY 10000000 // ADS clock speed (10MHz)
-#define SPI_DATA_BITS 8       // number of data bits
+#define SPI_DATA_BITS 8    // number of data bits
 
 union Sample
 {
@@ -33,8 +33,11 @@ union Sample
     } byte;
 };
 
-
 void readRAW(int16_t *, int);
+void reset();
 bool read_convertorBusy();
 void setConvertorStart(PinStatus);
 void setChipSelect(PinStatus);
+void setReset(PinStatus);
+void setupControlPins();
+

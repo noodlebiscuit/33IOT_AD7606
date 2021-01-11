@@ -48,42 +48,39 @@ void loop()
 {
   int16_t *message = new int16_t[8];
 
-  //uint32_t t1;
-  //uint32_t t2;
+  uint32_t t1;
+  uint32_t t2;
 
-  //t1 = micros();
+  t1 = micros();
 
-  //for (int j = 0; j < 1000; ++j)
-  //{
-  readRAW(message, 8);
-  for (int i = 0; i < 8; ++i)
+  for (int j = 0; j < 1000; ++j)
   {
-    Serial.print(message[i]);
-    Serial.print(" ");
+  readRAW(message, 4);
+  // for (int i = 0; i < 8; ++i)
+  // {
+  //   Serial.print(message[i]);
+  //   Serial.print(" ");
+  // }
+
+  // Serial.println("------------");
   }
 
-  Serial.println("------------");
-  //}
-
-  //t2 = micros();
+  t2 = micros();
 
   delete[] message;
 
   // // sampling time
-  // Serial.print("Samples: ");
-  // Serial.println(1000);
-  // Serial.print("Sampling time: ");
-  // Serial.print(static_cast<double>(t2 - t1) / 1000, 4);
-  // Serial.println("ms");
+  Serial.print("Samples: ");
+  Serial.println(1000);
+  Serial.print("Sampling time: ");
+  Serial.print(static_cast<double>(t2 - t1) / 1000, 4);
+  Serial.println("ms");
   delay(1000);
 }
 
 void readRAW(int16_t *rawDataBuffer, int channels)
 {
   // toggle the convertor start line
-  //digitalWrite(CONVST, LOW);
-  //digitalWrite(CONVST, HIGH);
-
   setConvertorStart(LOW);
   setConvertorStart(HIGH);
 
@@ -93,9 +90,9 @@ void readRAW(int16_t *rawDataBuffer, int channels)
   }
 
   // Enable DoutA and DoutB lines and shift-out the conversion results
-  //digitalWrite(CS, LOW);
-
   setChipSelect(LOW);
+
+  // read the channels
   for (char k = 0; k < channels; k++)
   {
     adc.byte.high = SPI.transfer(0x00);

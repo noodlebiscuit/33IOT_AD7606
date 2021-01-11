@@ -21,7 +21,7 @@
 #define BUSY 8   // AD7606 is busy              -PA18
 #define RESET 7  // AD7606 reset                -PA06
 
-#define FREQUENCY 3200000 // ADS clock speed (10MHz)
+#define FREQUENCY 10000000 // ADS clock speed (10MHz)
 #define SPI_DATA_BITS 8       // number of data bits
 
 union Sample

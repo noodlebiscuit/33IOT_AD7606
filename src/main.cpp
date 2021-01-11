@@ -2,7 +2,16 @@
 
 //AD7606 ad7606();
 
-//SPIClass *_spi;
+Sample adc;
+
+#define REGTYPE uint32_t
+REGTYPE pinConvst;
+volatile REGTYPE *modeConvst;
+volatile REGTYPE *outConvst;
+
+REGTYPE pinChipSelect;
+volatile REGTYPE *modeChipSelect;
+volatile REGTYPE *outChipSelect;
 
 void setup()
 {
@@ -22,77 +31,112 @@ void setup()
 
   digitalWrite(RESET, HIGH);
   digitalWrite(RESET, LOW);
+
+  pinConvst = digitalPinToBitMask(CONVST);
+  modeConvst = portModeRegister(digitalPinToPort(CONVST));
+  outConvst = portOutputRegister(digitalPinToPort(CONVST));
+
+  pinChipSelect = digitalPinToBitMask(CS);
+  modeChipSelect = portModeRegister(digitalPinToPort(CS));
+  outChipSelect = portOutputRegister(digitalPinToPort(CS));
+
+  // set pin 13 port as ouput
+  *modeConvst |= pinConvst;
 }
 
 void loop()
 {
   int16_t *message = new int16_t[8];
 
-  uint32_t t1;
-  uint32_t t2;
+  //uint32_t t1;
+  //uint32_t t2;
 
-  t1 = micros();
+  //t1 = micros();
 
-  for (int j = 0; j < 1000; ++j)
+  //for (int j = 0; j < 1000; ++j)
+  //{
+  readRAW(message, 8);
+  for (int i = 0; i < 8; ++i)
   {
-    readRAW(message);
-    // for (int i = 0; i < 8; ++i)
-    // {
-    //   Serial.print(message[i]);
-    //   Serial.print(" ");
-    // }
-
-    //Serial.println("------------");
+    Serial.print(message[i]);
+    Serial.print(" ");
   }
 
-  t2 = micros();
+  Serial.println("------------");
+  //}
+
+  //t2 = micros();
 
   delete[] message;
 
-
-    // sampling time
-  Serial.print("Samples: ");
-  Serial.println(1000);
-  Serial.print("Sampling time: ");
-  Serial.print(static_cast<double>(t2 - t1) / 1000, 4);
-  Serial.println("ms");
+  // // sampling time
+  // Serial.print("Samples: ");
+  // Serial.println(1000);
+  // Serial.print("Sampling time: ");
+  // Serial.print(static_cast<double>(t2 - t1) / 1000, 4);
+  // Serial.println("ms");
   delay(1000);
 }
 
-void readRAW(int16_t *rawDataBuffer)
+void readRAW(int16_t *rawDataBuffer, int channels)
 {
-  digitalWrite(CONVST, LOW);
-  digitalWrite(CONVST, HIGH);
+  // toggle the convertor start line
+  //digitalWrite(CONVST, LOW);
+  //digitalWrite(CONVST, HIGH);
+
+  setConvertorStart(LOW);
+  setConvertorStart(HIGH);
 
   // wait for conversions to be completed (low level on BUSY)
   while (read_convertorBusy())
   {
   }
-  //delayMicroseconds(5);
-
-  Sample adc;
 
   // Enable DoutA and DoutB lines and shift-out the conversion results
-  digitalWrite(CS, LOW);
-  for (char k = 0; k < 4; k++)
+  //digitalWrite(CS, LOW);
+
+  setChipSelect(LOW);
+  for (char k = 0; k < channels; k++)
   {
-    // send second command byte and receive first(msb) 4 bits
     adc.byte.high = SPI.transfer(0x00);
-
-    // receive last(lsb) 8 bits
     adc.byte.low = SPI.transfer(0x00);
-
     *(rawDataBuffer + k) = adc.value;
   }
-  digitalWrite(CS, HIGH);
+  setChipSelect(HIGH);
 }
 
-volatile uint32_t *chipSelect;
+/*
+** ================================================================================================
+**     Method      :  setConvertorStart
+**
+**     Description :
+**         monitors the ADC BUSY\ line
+**
+**     Returns  :
+**         returns true while line CB2 is busy
+** ================================================================================================
+*/
+void setConvertorStart(PinStatus status)
+{
+  *outConvst |= pinConvst;
+  *outConvst = pinConvst & status;
+}
 
+/*
+** ================================================================================================
+**     Method      :  setChipSelect
+**
+**     Description :
+**         monitors the ADC BUSY\ line
+**
+**     Returns  :
+**         returns true while line CB2 is busy
+** ================================================================================================
+*/
 void setChipSelect(PinStatus status)
 {
-  chipSelect = portOutputRegister(digitalPinToPort(10));
-  *chipSelect = status;
+  *outChipSelect |= pinChipSelect;
+  *outChipSelect = pinChipSelect & status;
 }
 
 /*

@@ -21,7 +21,7 @@
 #define BUSY 8   // AD7606 is busy              -PA18
 #define RESET 7  // AD7606 reset                -PA06
 
-#define FREQUENCY 6400000 // ADS clock speed (10MHz)
+#define FREQUENCY 3200000 // ADS clock speed (10MHz)
 #define SPI_DATA_BITS 8       // number of data bits
 
 union Sample
@@ -33,8 +33,8 @@ union Sample
     } byte;
 };
 
-void readRAW(int16_t *);
+
+void readRAW(int16_t *, int);
 bool read_convertorBusy();
-void setChipSelect(PinStatus, uint8_t);
-// instantiate the AD7606
-//AD7606 ad7606(MISO, SCLK, CS, CONVST, BUSY, RESET, FREQUENCY);
+void setConvertorStart(PinStatus);
+void setChipSelect(PinStatus);

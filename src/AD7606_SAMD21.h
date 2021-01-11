@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <Arduino.h>
 #include <SPI.h>
+#include <Arduino.h>
 
 #define REGTYPE uint32_t
 
@@ -43,7 +44,6 @@ private:
    pin_size_t _convst;
    pin_size_t _busy;
    pin_size_t _reset;
-   int _frequency;
    Sample adc;
 
    bool read_convertorBusy();
@@ -53,7 +53,7 @@ private:
    void setupControlPins();
 
 public:
-   AD7606_SAMD21(pin_size_t cs, pin_size_t convst, pin_size_t busy, pin_size_t reset, int frequency); 
+   AD7606_SAMD21(pin_size_t cs, pin_size_t convst, pin_size_t busy, pin_size_t reset); 
    void resetADC();
    void readRAW(int16_t*, int);
 };

@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include "Stream.h"
+#include "AD7606_SAMD21.h"
 
 #pragma once
 #include <stdint.h>
@@ -24,14 +25,14 @@
 #define FREQUENCY 10000000 // ADS clock speed (10MHz)
 #define SPI_DATA_BITS 8    // number of data bits
 
-union Sample
-{
-    int16_t value;
-    struct Byte
-    {
-        uint8_t low, high;
-    } byte;
-};
+// union Sample
+// {
+//     int16_t value;
+//     struct Byte
+//     {
+//         uint8_t low, high;
+//     } byte;
+// };
 
 void readRAW(int16_t *, int);
 void reset();

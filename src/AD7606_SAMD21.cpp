@@ -9,24 +9,17 @@
 **         convst    - PIN used to initiate the convertor start
 **         busy      - PIN read to determine if the convertor is still busy
 **         reset     - PIN used to reset the convertor
-**         frequency - sets the SPI clock frequency
 ** ================================================================================================
 */
-AD7606_SAMD21::AD7606_SAMD21(pin_size_t cs, pin_size_t convst, pin_size_t busy, pin_size_t reset, int frequency)
+AD7606_SAMD21::AD7606_SAMD21(pin_size_t cs, pin_size_t convst, pin_size_t busy, pin_size_t reset)
     : _cs(cs),
       _convst(convst),
       _busy(busy),
-      _reset(reset),
-      _frequency(frequency)
+      _reset(reset)
 {
    // use basic ARDUINO API
    pinMode(_reset, OUTPUT);
    pinMode(_busy, INPUT);
-
-   // initialize SPI interface
-   SPISettings settings(frequency, MSBFIRST, SPI_MODE0);
-   SPI.begin();
-   SPI.beginTransaction(settings);
 
    // bit-bash control of the AD7606 handshake and control pins
    setupControlPins();
